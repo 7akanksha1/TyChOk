@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Checkout</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background-color: #f7f7f7;
+      position: relative;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .checkout-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      position: relative;
+      z-index: 1;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 1rem;
+    }
+
+    .item img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-right: 1rem;
+    }
+
+    .item-details {
+      flex-grow: 1;
+    }
+
+    .total {
+      font-weight: bold;
+      text-align: right;
+      margin-top: 1rem;
+      font-size: 1.2rem;
+    }
+
+    form {
+      margin-top: 2rem;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background: #28a745;
+      color: white;
+      padding: 0.6rem 1rem;
+      border: none;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .back-btn {
+      background: #007bff;
+    }
+
+    /* === Popup === */
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .popup-content {
+      background: white;
+      padding: 2rem;
+      text-align: center;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      animation: fadeIn 0.5s ease;
+      position: relative;
+    }
+
+    .popup-content h3 {
+      margin-bottom: 1rem;
+    }
+
+    .popup-content button {
+      margin-top: 1rem;
+      background: #28a745;
+    }
+
+    .popup-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 20px;
+      cursor: pointer;
+      color: #999;
+    }
+
+    .popup-close:hover {
+      color: #000;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="checkout-container">
+    <h2>Checkout</h2>
+    <div id="itemList"></div>
+    <div class="total" id="totalAmount">Total: ₹0</div>
+
+    <form id="paymentForm">
+      <input type="text" placeholder="Full Name" required />
+      <input type="email" placeholder="Email" required />
+      <input type="text" placeholder="Card Number" maxlength="16" required />
+      <button type="submit">Pay Now</button>
+    </form>
+  </div>
+
+  <form id="orderForm" action="https://formspree.io/f/mgvkdlgy" method="POST" style="display:none;">
+  <input type="hidden" name="orderDetails" id="orderDetails" />
+  <input type="hidden" name="totalAmount" id="totalAmount" />
+  <input type="hidden" name="_subject" value="New Order from TyChOk" />
+  <!-- Optional customer email input if you want reply -->
+  <input type="email" name="_replyto" id="singhakanksha7123@gmail.com" />
+</form>
+
+
+  <!-- Popup -->
+  <div class="popup" id="thankYouPopup">
+    <div class="popup-content">
+      <span class="popup-close" id="closePopup">&times;</span>
+      <h3>✅ Payment Successful!</h3>
+      <p>Thank you for your purchase.</p>
+      <button id="goBackBtn">OK</button>
+    </div>
+  </div>
+<script>
+  const items = JSON.parse(sessionStorage.getItem("checkoutItems")) || [];
+const itemList = document.getElementById("itemList");
+const totalAmount = document.getElementById("totalAmount");
+
+let total = 0;
+
+items.forEach(item => {
+  const subtotal = item.price * item.quantity;
+  total += subtotal;
+
+  const div = document.createElement("div");
+  div.className = "item";
+  div.innerHTML = `
+    <img src="${item.img}" />
+    <div class="item-details">
+      <strong>${item.name}</strong><br>
+      ₹${item.price} × ${item.quantity} = ₹${subtotal}
+    </div>
+  `;
+  itemList.appendChild(div);
+});
+
+totalAmount.textContent = "Total: ₹" + total;
+
+const popup = document.getElementById("thankYouPopup");
+const closeBtn = document.getElementById("closePopup");
+const goBackBtn = document.getElementById("goBackBtn");
+
+document.getElementById("paymentForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  // Show popup
+  popup.style.display = "flex";
+
+  // Clear cart and checkout data after showing popup
+  sessionStorage.removeItem("checkoutItems");
+  localStorage.removeItem("cart");
+
+  // Reset form and disable submit button to prevent double submission
+  e.target.reset();
+  e.target.querySelector("button[type='submit']").disabled = true;
+});
+
+closeBtn.addEventListener("click", redirectToShop);
+goBackBtn.addEventListener("click", redirectToShop);
+
+function redirectToShop() {
+  sessionStorage.setItem("shopMessage", "Enjoy shopping!");
+  window.location.href = "product.html";
+}
+</script>
+</body>
+</html>
